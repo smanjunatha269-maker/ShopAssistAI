@@ -1,0 +1,44 @@
+[
+  {
+    "id": "returns-001",
+    "category": "returns",
+    "title": "Return Policy",
+    "content": "Items can be returned within 30 days of delivery in their original condition. Start a return from your order history or contact support with your order number."
+  },
+  {
+    "id": "shipping-001",
+    "category": "shipping",
+    "title": "Shipping Times",
+    "content": "Standard shipping takes 5–7 business days. Express shipping delivers in 2–3 business days. Free standard shipping is available on orders over $50."
+  },
+  {
+    "id": "refunds-001",
+    "category": "refunds",
+    "title": "Refund Processing",
+    "content": "Refunds are issued to the original payment method within 5–10 business days after we receive and inspect your return."
+  },
+  {
+    "id": "warranty-001",
+    "category": "warranty",
+    "title": "Product Warranty",
+    "content": "Electronics include a 1-year manufacturer warranty. Extended protection plans can be purchased at checkout for an additional 2 years of coverage."
+  },
+  {
+    "id": "payments-001",
+    "category": "payments",
+    "title": "Payment Methods",
+    "content": "We accept Visa, Mastercard, American Express, PayPal, Apple Pay, and Google Pay. Buy Now, Pay Later options are available through Klarna and Affirm."
+  },
+  {
+    "id": "memberships-001",
+    "category": "memberships",
+    "title": "ShopAssist Plus Membership",
+    "content": "ShopAssist Plus members get free express shipping, early access to sales, and 5% back on every purchase. Membership is $9.99/month or $89/year."
+  },
+  {
+    "id": "promotions-001",
+    "category": "promotions",
+    "title": "Current Promotions",
+    "content": "Use code WELCOME15 for 15% off your first order. Members receive an additional 10% off during seasonal sales. Promotions cannot be combined unless stated."
+  }
+]
