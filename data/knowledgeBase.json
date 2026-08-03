@@ -1,44 +1,142 @@
 [
   {
-    "id": "returns-001",
-    "category": "returns",
-    "title": "Return Policy",
-    "content": "Items can be returned within 30 days of delivery in their original condition. Start a return from your order history or contact support with your order number."
+    "id": 1,
+    "category": "Returns",
+    "title": "30-Day Return Policy",
+    "keywords": ["return", "returns", "send back", "return item", "return window"],
+    "content": "We accept returns within 30 days of delivery for most items. Products must be unused, in their original packaging, and include all tags and accessories. To start a return, visit your order history and select the item you wish to return. A prepaid shipping label will be emailed to you within 24 hours."
   },
   {
-    "id": "shipping-001",
-    "category": "shipping",
-    "title": "Shipping Times",
-    "content": "Standard shipping takes 5–7 business days. Express shipping delivers in 2–3 business days. Free standard shipping is available on orders over $50."
+    "id": 2,
+    "category": "Refunds",
+    "title": "Refund Processing Timeline",
+    "keywords": ["refund", "refunds", "money back", "credit", "reimbursement"],
+    "content": "Once we receive and inspect your returned item, refunds are processed within 5–10 business days. The refund will be issued to your original payment method. Please note that your bank or card issuer may take an additional 3–5 business days to post the credit to your account."
   },
   {
-    "id": "refunds-001",
-    "category": "refunds",
-    "title": "Refund Processing",
-    "content": "Refunds are issued to the original payment method within 5–10 business days after we receive and inspect your return."
+    "id": 3,
+    "category": "Shipping",
+    "title": "Domestic Shipping Options",
+    "keywords": ["shipping", "ship", "delivery speed", "express", "standard shipping", "free shipping"],
+    "content": "We offer Standard Shipping (5–7 business days) and Express Shipping (2–3 business days). Free standard shipping is available on all orders over $50. Orders placed before 2 PM EST ship the same business day. You will receive a confirmation email with tracking information once your order ships."
   },
   {
-    "id": "warranty-001",
-    "category": "warranty",
-    "title": "Product Warranty",
-    "content": "Electronics include a 1-year manufacturer warranty. Extended protection plans can be purchased at checkout for an additional 2 years of coverage."
+    "id": 4,
+    "category": "Delivery",
+    "title": "Delivery Information",
+    "keywords": ["delivery", "deliver", "arrive", "received", "package", "doorstep"],
+    "content": "Deliveries are made Monday through Saturday, excluding federal holidays. A signature may be required for orders over $200. If you are not home, the carrier will leave a notice with instructions for rescheduling or picking up your package at a nearby location."
   },
   {
-    "id": "payments-001",
-    "category": "payments",
-    "title": "Payment Methods",
-    "content": "We accept Visa, Mastercard, American Express, PayPal, Apple Pay, and Google Pay. Buy Now, Pay Later options are available through Klarna and Affirm."
+    "id": 5,
+    "category": "Order Tracking",
+    "title": "How to Track Your Order",
+    "keywords": ["track", "tracking", "order status", "where is my order", "shipment"],
+    "content": "Track your order by logging into your account and visiting the Order History page. Click on any order to view real-time tracking updates. You can also track your package using the tracking number sent in your shipping confirmation email. Tracking information typically becomes available within 24 hours of shipment."
   },
   {
-    "id": "memberships-001",
-    "category": "memberships",
+    "id": 6,
+    "category": "Cancellation",
+    "title": "Order Cancellation Policy",
+    "keywords": ["cancel", "cancellation", "cancel order", "stop order"],
+    "content": "Orders can be cancelled within one hour of placement at no charge. After one hour, if your order has not yet shipped, contact our support team to request a cancellation. Once an order has shipped, it cannot be cancelled, but you may return the item after delivery following our standard return policy."
+  },
+  {
+    "id": 7,
+    "category": "Exchange",
+    "title": "Product Exchange Policy",
+    "keywords": ["exchange", "swap", "replace", "different size", "different color"],
+    "content": "We offer free exchanges within 30 days of delivery for a different size or color of the same item, subject to availability. To request an exchange, initiate a return through your order history and select the exchange option. Your replacement item will ship once we receive the original product."
+  },
+  {
+    "id": 8,
+    "category": "Warranty",
+    "title": "Product Warranty Coverage",
+    "keywords": ["warranty", "guarantee", "defect", "malfunction", "repair", "replacement"],
+    "content": "All electronics come with a 1-year manufacturer warranty covering defects in materials and workmanship. Extended protection plans are available at checkout for up to 3 additional years of coverage. Warranty claims can be filed through your account or by contacting our support team with your order number and a description of the issue."
+  },
+  {
+    "id": 9,
+    "category": "Payments",
+    "title": "Accepted Payment Methods",
+    "keywords": ["payment", "pay", "credit card", "debit", "paypal", "apple pay", "klarna", "affirm"],
+    "content": "We accept Visa, Mastercard, American Express, Discover, PayPal, Apple Pay, and Google Pay. Buy Now, Pay Later options are available through Klarna and Affirm at checkout. All transactions are secured with 256-bit SSL encryption. We do not store your full credit card details on our servers."
+  },
+  {
+    "id": 10,
+    "category": "Gift Cards",
+    "title": "Gift Card Terms",
+    "keywords": ["gift card", "gift cards", "e-gift", "store credit", "balance"],
+    "content": "Gift cards are available in denominations from $25 to $500 and never expire. E-gift cards are delivered via email within 2 hours of purchase. Physical gift cards ship within 3–5 business days. Gift cards cannot be redeemed for cash and are non-refundable once purchased."
+  },
+  {
+    "id": 11,
+    "category": "Membership",
     "title": "ShopAssist Plus Membership",
-    "content": "ShopAssist Plus members get free express shipping, early access to sales, and 5% back on every purchase. Membership is $9.99/month or $89/year."
+    "keywords": ["membership", "member", "plus", "subscribe", "loyalty", "rewards"],
+    "content": "ShopAssist Plus members enjoy free express shipping on every order, early access to sales events, and 5% back in rewards on every purchase. Membership costs $9.99 per month or $89 per year. You can cancel anytime from your account settings with no cancellation fees."
   },
   {
-    "id": "promotions-001",
-    "category": "promotions",
-    "title": "Current Promotions",
-    "content": "Use code WELCOME15 for 15% off your first order. Members receive an additional 10% off during seasonal sales. Promotions cannot be combined unless stated."
+    "id": 12,
+    "category": "Promotions",
+    "title": "Current Promotions and Sales",
+    "keywords": ["promotion", "promotions", "sale", "discount", "deal", "offer"],
+    "content": "New customers can use code WELCOME15 for 15% off their first order. ShopAssist Plus members receive an additional 10% off during seasonal sales. Promotions cannot be combined unless explicitly stated. Check our homepage and email newsletter for the latest deals and limited-time offers."
+  },
+  {
+    "id": 13,
+    "category": "Coupons",
+    "title": "Coupon Code Policy",
+    "keywords": ["coupon", "coupons", "promo code", "discount code", "voucher"],
+    "content": "Coupon codes must be entered at checkout before completing your purchase and cannot be applied retroactively. Each coupon is limited to one use per customer unless otherwise noted. Coupons cannot be combined with other offers and do not apply to gift cards, clearance items, or membership fees."
+  },
+  {
+    "id": 14,
+    "category": "Damaged Products",
+    "title": "Damaged or Defective Items",
+    "keywords": ["damaged", "broken", "defective", "wrong item", "missing", "faulty"],
+    "content": "If you receive a damaged, defective, or incorrect item, please contact us within 48 hours of delivery with photos of the product and packaging. We will arrange a free return and send a replacement or issue a full refund at your preference. No return shipping costs will apply for damaged or defective products."
+  },
+  {
+    "id": 15,
+    "category": "International Shipping",
+    "title": "International Shipping Policy",
+    "keywords": ["international", "overseas", "abroad", "customs", "duty", "global"],
+    "content": "We ship to over 40 countries worldwide. International delivery typically takes 7–21 business days depending on the destination. Customers are responsible for any customs duties, taxes, or import fees charged by their country. International orders are not eligible for free shipping or standard return shipping labels."
+  },
+  {
+    "id": 16,
+    "category": "Contact Support",
+    "title": "How to Contact Customer Support",
+    "keywords": ["contact", "support", "help", "phone", "email", "chat", "customer service"],
+    "content": "Our customer support team is available 24/7 via live chat on our website, by email at support@shopassist.com, or by phone at 1-800-SHOP-AI. Average response time for email inquiries is under 4 hours. For faster assistance, have your order number ready when contacting support."
+  },
+  {
+    "id": 17,
+    "category": "Product Availability",
+    "title": "Stock and Availability",
+    "keywords": ["availability", "in stock", "out of stock", "backorder", "restock", "notify"],
+    "content": "Product availability is shown in real time on each product page. If an item is out of stock, you can sign up for restock notifications by entering your email on the product page. Backordered items typically ship within 2–4 weeks. We reserve the right to cancel orders if an item becomes unavailable after purchase."
+  },
+  {
+    "id": 18,
+    "category": "Size Guide",
+    "title": "Sizing and Fit Guide",
+    "keywords": ["size", "sizing", "fit", "measurements", "size chart", "dimensions"],
+    "content": "Each product page includes a detailed size chart with measurements in inches and centimeters. If you are between sizes, we recommend sizing up for a more comfortable fit. For footwear, measure your foot length while standing and compare it to our size chart. Free size exchanges are available within 30 days of delivery."
+  },
+  {
+    "id": 19,
+    "category": "Account Management",
+    "title": "Managing Your Account",
+    "keywords": ["account", "profile", "password", "login", "sign in", "settings", "address"],
+    "content": "Manage your account by logging in and visiting Account Settings. From there you can update your personal information, change your password, manage saved addresses and payment methods, and view your order history. To delete your account, contact our support team. Account deletion is permanent and cannot be undone."
+  },
+  {
+    "id": 20,
+    "category": "Privacy",
+    "title": "Privacy and Data Protection",
+    "keywords": ["privacy", "data", "personal information", "GDPR", "cookies", "security"],
+    "content": "We are committed to protecting your personal information. We collect only the data necessary to process orders and improve your shopping experience. We never sell your personal data to third parties. You can request a copy of your data or ask us to delete it at any time by emailing privacy@shopassist.com. See our full Privacy Policy for details."
   }
 ]

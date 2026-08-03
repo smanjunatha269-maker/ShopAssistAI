@@ -6,9 +6,10 @@ export interface Message {
 }
 
 export interface KnowledgeBaseItem {
-  id: string
+  id: number
   category: string
   title: string
+  keywords: string[]
   content: string
 }
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import ChatInput from '../components/ChatInput'
 import ChatWindow from '../components/ChatWindow'
 import Header from '../components/Header'
-import { sendMessage } from '../services/chatService'
+import { getSupportResponse } from '../services/supportService'
 import type { Message } from '../types'
 
 const TOPICS = [
@@ -43,8 +43,8 @@ export default function Home() {
     setIsLoading(true)
 
     try {
-      const response = await sendMessage(content)
-      const assistantMessage = createMessage('assistant', response.message)
+      const response = await getSupportResponse(content)
+      const assistantMessage = createMessage('assistant', response)
       setMessages((prev) => [...prev, assistantMessage])
     } finally {
       setIsLoading(false)
