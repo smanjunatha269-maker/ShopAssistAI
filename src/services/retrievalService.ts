@@ -1,32 +1,133 @@
+import knowledgeBaseData from '../../data/knowledgeBase.json'
 import type { KnowledgeBaseItem } from '../types'
 
-const mockResults: KnowledgeBaseItem[] = [
-  {
-    id: 'returns-001',
-    category: 'returns',
-    title: 'Return Policy',
-    content:
-      'Items can be returned within 30 days of delivery in their original condition.',
-  },
-  {
-    id: 'shipping-001',
-    category: 'shipping',
-    title: 'Shipping Times',
-    content:
-      'Standard shipping takes 5–7 business days. Express shipping delivers in 2–3 business days.',
-  },
-]
+const KNOWLEDGE_BASE: KnowledgeBaseItem[] =
+  knowledgeBaseData as KnowledgeBaseItem[]
+
+const TOP_RESULTS = 3
+
+const STOP_WORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'is',
+  'are',
+  'was',
+  'were',
+  'be',
+  'been',
+  'being',
+  'have',
+  'has',
+  'had',
+  'do',
+  'does',
+  'did',
+  'will',
+  'would',
+  'could',
+  'should',
+  'may',
+  'might',
+  'can',
+  'to',
+  'of',
+  'in',
+  'for',
+  'on',
+  'with',
+  'at',
+  'by',
+  'from',
+  'as',
+  'into',
+  'about',
+  'tell',
+  'me',
+  'my',
+  'i',
+  'you',
+  'your',
+  'what',
+  'how',
+  'when',
+  'where',
+  'which',
+  'who',
+  'please',
+  'want',
+  'know',
+  'get',
+  'any',
+  'some',
+])
+
+interface ScoredPolicy {
+  policy: KnowledgeBaseItem
+  score: number
+}
+
+function tokenize(question: string): string[] {
+  return question
+    .toLowerCase()
+    .split(/\W+/)
+    .filter((word) => word.length > 1 && !STOP_WORDS.has(word))
+}
+
+function wordMatchesField(word: string, field: string): boolean {
+  return field.includes(word)
+}
+
+function scorePolicy(policy: KnowledgeBaseItem, words: string[]): number {
+  if (words.length === 0) return 0
+
+  const category = policy.category.toLowerCase()
+  const title = policy.title.toLowerCase()
+  const content = policy.content.toLowerCase()
+  const keywords = policy.keywords.map((keyword) => keyword.toLowerCase())
+
+  let score = 0
+
+  for (const word of words) {
+    for (const keyword of keywords) {
+      if (keyword === word || keyword.includes(word) || word.includes(keyword)) {
+        score += 5
+      }
+    }
+
+    if (wordMatchesField(word, category)) {
+      score += 3
+    }
+
+    if (wordMatchesField(word, title)) {
+      score += 2
+    }
+
+    if (wordMatchesField(word, content)) {
+      score += 1
+    }
+  }
+
+  return score
+}
 
 /**
- * Placeholder knowledge-base search.
- * Returns mock data until retrieval is implemented.
+ * Search the knowledge base for policies relevant to a user question.
+ * Acts as an abstraction layer — the scoring implementation can later
+ * be swapped for a vector-database search without changing callers.
  */
 export async function searchKnowledgeBase(
   userQuestion: string,
 ): Promise<KnowledgeBaseItem[]> {
-  void userQuestion
+  const words = tokenize(userQuestion)
 
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(mockResults), 300)
-  })
+  const scored: ScoredPolicy[] = KNOWLEDGE_BASE.map((policy) => ({
+    policy,
+    score: scorePolicy(policy, words),
+  }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, TOP_RESULTS)
+
+  return scored.map((entry) => entry.policy)
 }
