@@ -12,9 +12,13 @@ const OPENROUTER_CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 const SYSTEM_PROMPT = `You are ShopAssist AI.
 
-Answer ONLY using the supplied company policies.
+Answer ONLY using the supplied policies.
 
-If the answer cannot be found, politely say that the information is unavailable.`
+If the answer is not present in the retrieved policies, respond:
+
+"I couldn't find that information in the available company policies."
+
+Do not infer or invent information.`
 
 /**
  * Builds the user prompt: relevant policies followed by the question.
