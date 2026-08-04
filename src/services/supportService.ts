@@ -1,38 +1,21 @@
-import { generateAnswer } from './chatService'
-import { searchKnowledgeBase } from './retrievalService'
+import { askQuestion } from './chatService'
 import type { AssistantResponse } from '../types'
-
-const NO_POLICIES_MESSAGE =
-  "I couldn't find any relevant company policy."
 
 const API_ERROR_MESSAGE =
   "I'm unable to answer your question right now. Please try again."
 
 /**
- * Orchestrates retrieval and AI generation.
- * Retrieval and generation remain separate concerns.
+ * Frontend orchestration for a support question.
+ * Retrieval and generation run server-side inside /api/chat;
+ * this service only handles the request and error fallback.
  */
 export async function getSupportResponse(
   userQuestion: string,
 ): Promise<AssistantResponse> {
-  let policies
-
   try {
-    policies = await searchKnowledgeBase(userQuestion)
+    const response = await askQuestion(userQuestion)
+    return { answer: response.answer }
   } catch {
-    return { answer: API_ERROR_MESSAGE, sources: [] }
-  }
-
-  if (policies.length === 0) {
-    return { answer: NO_POLICIES_MESSAGE, sources: [] }
-  }
-
-  try {
-    return await generateAnswer({
-      question: userQuestion,
-      retrievedPolicies: policies,
-    })
-  } catch {
-    return { answer: API_ERROR_MESSAGE, sources: [] }
+    return { answer: API_ERROR_MESSAGE }
   }
 }

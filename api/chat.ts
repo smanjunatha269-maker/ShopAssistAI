@@ -1,86 +1,26 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+/**
+ * Chat endpoint — thin orchestration layer only.
+ *
+ * 1. Validate the request ({ question })
+ * 2. retrievalService: semantic top-K policy retrieval
+ * 3. llmService: grounded answer generation (Nemotron via OpenRouter)
+ * 4. Return only the generated answer
+ *
+ * All retrieval and LLM logic lives in api/_lib — not in this route.
+ */
 
-interface RetrievedPolicy {
-  id: number
-  category: string
-  title: string
-  keywords: string[]
-  content: string
-}
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { generateAnswer } from './_lib/llmService.js'
+import { retrieveTopPolicies } from './_lib/retrievalService.js'
 
 interface ChatRequestBody {
   question: string
-  retrievedPolicies: RetrievedPolicy[]
-}
-
-interface ChatApiResponse {
-  answer: string
-  sources: string[]
-}
-
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-
-const SYSTEM_PROMPT = `You are ShopAssist AI.
-
-You are a customer support assistant.
-
-Answer ONLY using the retrieved company policies.
-
-Never invent information.
-
-Never answer from your own knowledge.
-
-If the answer cannot be found in the provided policies, respond:
-
-"I couldn't find that information in our knowledge base."
-
-Always be polite.
-
-Keep responses under 100 words.
-
-Respond with JSON only in this exact format:
-{"answer":"your response here","sources":["Policy Title 1","Policy Title 2"]}
-
-The sources array must contain the titles of the policies you used to form your answer.`
-
-function buildUserPrompt(question: string, policies: RetrievedPolicy[]): string {
-  const policiesText = policies
-    .map(
-      (policy, index) =>
-        `Policy ${index + 1}:\nTitle: ${policy.title}\nCategory: ${policy.category}\nContent: ${policy.content}`,
-    )
-    .join('\n\n')
-
-  return `Customer Question:\n${question}\n\nRetrieved Policies:\n${policiesText}`
-}
-
-function parseModelResponse(content: string): ChatApiResponse {
-  const cleaned = content.replace(/```json\n?|\n?```/g, '').trim()
-  const parsed = JSON.parse(cleaned) as Partial<ChatApiResponse>
-
-  if (!parsed.answer || typeof parsed.answer !== 'string') {
-    throw new Error('Model response missing answer field')
-  }
-
-  return {
-    answer: parsed.answer,
-    sources: Array.isArray(parsed.sources)
-      ? parsed.sources.filter((source): source is string => typeof source === 'string')
-      : [],
-  }
 }
 
 function isValidRequestBody(body: unknown): body is ChatRequestBody {
   if (!body || typeof body !== 'object') return false
-
-  const { question, retrievedPolicies } = body as ChatRequestBody
-
-  return (
-    typeof question === 'string' &&
-    question.trim().length > 0 &&
-    Array.isArray(retrievedPolicies) &&
-    retrievedPolicies.length > 0
-  )
+  const { question } = body as ChatRequestBody
+  return typeof question === 'string' && question.trim().length > 0
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -92,52 +32,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid request body' })
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY
-  const model = process.env.OPENROUTER_MODEL
-
-  if (!apiKey || !model) {
-    return res.status(500).json({ error: 'Server configuration error' })
-  }
-
-  const { question, retrievedPolicies } = req.body
+  const { question } = req.body
 
   try {
-    const openRouterResponse = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.VERCEL_URL ?? 'https://shopassist-ai.vercel.app',
-        'X-Title': 'ShopAssist AI',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(question, retrievedPolicies) },
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    })
+    const policies = await retrieveTopPolicies(question)
 
-    if (!openRouterResponse.ok) {
-      const errorText = await openRouterResponse.text()
-      console.error('OpenRouter API error:', errorText)
-      return res.status(502).json({ error: 'AI service unavailable' })
+    if (policies.length === 0) {
+      return res
+        .status(200)
+        .json({ answer: "I couldn't find any relevant company policy." })
     }
 
-    const completion = (await openRouterResponse.json()) as {
-      choices?: Array<{ message?: { content?: string } }>
-    }
+    const answer = await generateAnswer(question, policies)
 
-    const content = completion.choices?.[0]?.message?.content
-
-    if (!content) {
-      return res.status(502).json({ error: 'Empty response from AI service' })
-    }
-
-    const result = parseModelResponse(content)
-    return res.status(200).json(result)
+    return res.status(200).json({ answer })
   } catch (error) {
     console.error('Chat handler error:', error)
     return res.status(500).json({ error: 'Failed to generate response' })

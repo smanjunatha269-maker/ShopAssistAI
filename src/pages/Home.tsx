@@ -49,11 +49,7 @@ export default function Home() {
 
     try {
       const response = await getSupportResponse(content)
-      const assistantMessage = createMessage(
-        'assistant',
-        response.answer,
-        response.sources,
-      )
+      const assistantMessage = createMessage('assistant', response.answer)
       setMessages((prev) => [...prev, assistantMessage])
     } finally {
       setIsLoading(false)
