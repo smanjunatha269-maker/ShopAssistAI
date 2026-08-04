@@ -58,7 +58,7 @@ export async function generateAnswer(
     },
     body: JSON.stringify({
       model,
-      temperature:0.7,
+      temperature:0.1,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: buildUserPrompt(question, policies) },
