@@ -6,8 +6,9 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 
 - Modern landing page with topic quick-actions
 - ChatGPT-style chat interface (scrollable messages, fixed input)
-- Placeholder knowledge base and retrieval service
-- Vercel serverless API endpoint (`api/chat.ts`)
+- Knowledge base retrieval with relevance scoring
+- AI-powered answers via OpenRouter (serverless API)
+- Source citations displayed under each response
 
 ## Tech Stack
 
@@ -15,6 +16,7 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 - Vite 8
 - TypeScript
 - Tailwind CSS 4
+- OpenRouter (LLM)
 - Vercel (deployment)
 
 ## Project Structure
@@ -23,12 +25,23 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 src/
   components/     # Reusable UI components
   pages/          # Page-level components
-  services/       # API and retrieval services
+  services/       # Retrieval, chat, and orchestration services
   types/          # Shared TypeScript types
 data/
-  knowledgeBase.json   # Sample policy data
+  knowledgeBase.json   # Policy data
 api/
-  chat.ts         # Serverless chat endpoint (placeholder)
+  chat.ts              # Serverless AI generation endpoint
+  promptBuilder.ts     # Prompt construction
+  types.ts             # API request/response types
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and set:
+
+```
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_MODEL=openai/gpt-4o-mini
 ```
 
 ## Getting Started
@@ -40,22 +53,24 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) to view the app.
 
-## Deployment
-
-Deploy to Vercel:
-
-```bash
-npx vercel
-```
-
 For local development with the API endpoint:
 
 ```bash
 npx vercel dev
 ```
 
-## Roadmap
+## Deployment
 
-- [ ] Connect to LLM
-- [ ] Implement knowledge base retrieval (RAG)
-- [ ] Vector database integration
+Deploy to Vercel and configure `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` in your project environment variables.
+
+```bash
+npx vercel
+```
+
+## Architecture
+
+1. **Retrieval** — `searchKnowledgeBase()` finds the top 3 relevant policies
+2. **Generation** — `/api/chat` sends policies + question to OpenRouter
+3. **UI** — displays the AI answer with cited policy sources
+
+Retrieval and generation are kept separate. The frontend never calls OpenRouter directly.
