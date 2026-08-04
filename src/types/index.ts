@@ -2,6 +2,7 @@ export interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+  sources?: string[]
   timestamp: Date
 }
 
@@ -13,6 +14,17 @@ export interface KnowledgeBaseItem {
   content: string
 }
 
-export interface ChatResponse {
-  message: string
+export interface ChatRequestBody {
+  question: string
+  retrievedPolicies: KnowledgeBaseItem[]
+}
+
+export interface ChatApiResponse {
+  answer: string
+  sources: string[]
+}
+
+export interface AssistantResponse {
+  answer: string
+  sources: string[]
 }

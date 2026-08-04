@@ -17,6 +17,19 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
         }`}
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
+
+        {!isUser && message.sources && message.sources.length > 0 && (
+          <div className="mt-3 border-t border-slate-200 pt-2">
+            <p className="text-xs font-medium text-slate-500">Sources</p>
+            <ul className="mt-1 space-y-0.5">
+              {message.sources.map((source) => (
+                <li key={source} className="text-xs text-slate-500">
+                  {source}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )

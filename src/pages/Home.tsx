@@ -15,11 +15,16 @@ const TOPICS = [
   'Promotions',
 ]
 
-function createMessage(role: Message['role'], content: string): Message {
+function createMessage(
+  role: Message['role'],
+  content: string,
+  sources?: string[],
+): Message {
   return {
     id: crypto.randomUUID(),
     role,
     content,
+    sources,
     timestamp: new Date(),
   }
 }
@@ -44,7 +49,11 @@ export default function Home() {
 
     try {
       const response = await getSupportResponse(content)
-      const assistantMessage = createMessage('assistant', response)
+      const assistantMessage = createMessage(
+        'assistant',
+        response.answer,
+        response.sources,
+      )
       setMessages((prev) => [...prev, assistantMessage])
     } finally {
       setIsLoading(false)

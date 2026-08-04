@@ -1,13 +1,32 @@
-import { formatRetrievalResults } from './retrievalFormatter'
+import { generateAnswer } from './chatService'
 import { searchKnowledgeBase } from './retrievalService'
+import type { AssistantResponse } from '../types'
+
+const NO_POLICIES_MESSAGE =
+  "I couldn't find any relevant company policy."
+
+const API_ERROR_MESSAGE =
+  "I'm unable to answer your question right now. Please try again."
 
 /**
- * Handles a user support question by searching the knowledge base
- * and returning a formatted response. Keeps retrieval logic out of UI components.
+ * Orchestrates retrieval and AI generation.
+ * Retrieval and generation remain separate concerns.
  */
 export async function getSupportResponse(
   userQuestion: string,
-): Promise<string> {
+): Promise<AssistantResponse> {
   const policies = await searchKnowledgeBase(userQuestion)
-  return formatRetrievalResults(policies)
+
+  if (policies.length === 0) {
+    return { answer: NO_POLICIES_MESSAGE, sources: [] }
+  }
+
+  try {
+    return await generateAnswer({
+      question: userQuestion,
+      retrievedPolicies: policies,
+    })
+  } catch {
+    return { answer: API_ERROR_MESSAGE, sources: [] }
+  }
 }
