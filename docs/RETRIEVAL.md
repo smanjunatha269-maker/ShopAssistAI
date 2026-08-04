@@ -1,48 +1,52 @@
 # Retrieval Pipeline
 
-ShopAssist AI uses **embedding-based semantic retrieval** to find the most relevant company policies for a customer question.
+ShopAssist AI uses **server-side embedding-based semantic retrieval** to find the most relevant company policies before calling the LLM.
 
 ## Overview
 
 ```
-Customer Question
-       │
-       ▼
-┌──────────────────┐
-│ embeddingClient  │  ← embeds the question (/api/embed or local fallback)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ embeddingStore   │  ← loads pre-computed policy embeddings (data/embeddings.json)
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│ cosine similarity│  ← ranks policies, returns top 3
-└────────┬─────────┘
-         │
-         ▼
-   Top 3 Policies → passed to /api/chat (LLM)
+Frontend: POST /api/chat { question }
+                │
+                ▼
+┌─────────────────────────────────────────┐
+│ api/chat.ts  (thin orchestration only)  │
+└───────────────┬─────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────┐
+│ api/_lib/retrievalService.ts            │
+│  1. Load embeddings.json (cached)       │
+│  2. Load knowledgeBase.json (cached)    │
+│  3. Embed the question                  │
+│  4. Cosine similarity vs all embeddings │
+│  5. Return top-K policies with content  │
+└───────────────┬─────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────────┐
+│ api/_lib/llmService.ts                  │
+│  Build grounded prompt → Nemotron       │
+│  (OpenRouter) → return answer           │
+└───────────────┬─────────────────────────┘
+                │
+                ▼
+         { answer } → frontend
 ```
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `data/knowledgeBase.json` | Source of truth for policy content (id, title, category, content) |
+| `data/knowledgeBase.json` | Source of truth for policy content |
 | `data/embeddings.json` | Pre-computed policy embeddings (id, title, embedding) |
-| `scripts/generateEmbeddings.ts` | Dev script to regenerate embeddings when the knowledge base changes |
-| `api/embed.ts` | Serverless endpoint that embeds customer questions via OpenRouter |
-| `src/retrieval/types.ts` | `EmbeddingStore` and `EmbeddingClient` interfaces |
-| `src/retrieval/embeddingStore.ts` | Local JSON implementation of `EmbeddingStore` |
-| `src/retrieval/embeddingClient.ts` | Hybrid client: server API with local browser fallback |
-| `src/retrieval/similarity.ts` | Cosine similarity and ranking utilities |
-| `src/services/retrievalService.ts` | Public retrieval API (`searchKnowledgeBase`) |
+| `scripts/generateEmbeddings.ts` | Dev script to regenerate embeddings when KB changes |
+| `api/_lib/retrievalService.ts` | Server-side retrieval: load, embed, similarity, top-K |
+| `api/_lib/llmService.ts` | Server-side LLM: grounded prompt + Nemotron call |
+| `api/chat.ts` | Thin route: calls retrievalService then llmService |
 
 ## Regenerating Embeddings
 
-When you add or edit policies in `knowledgeBase.json`, regenerate embeddings:
+When you add or edit policies in `knowledgeBase.json`:
 
 ```bash
 # With OpenRouter (recommended for production)
@@ -52,26 +56,16 @@ OPENROUTER_API_KEY=sk-... npm run generate:embeddings
 npm run generate:embeddings
 ```
 
-**Important:** Policy embeddings and query embeddings must use the same model. If you generate policy embeddings with OpenRouter, ensure `OPENROUTER_EMBEDDING_MODEL` is set in Vercel so `/api/embed` uses the same model.
+**Important:** Policy embeddings and query embeddings must use the same model. The retrieval service checks embedding dimensions and falls back to the local Xenova model if they mismatch.
 
 ## Swapping for a Vector Database
 
-The retrieval layer is designed for easy replacement:
-
-1. Implement `EmbeddingStore` with your vector DB client (e.g. Pinecone, pgvector)
-2. Optionally replace `EmbeddingClient` if the DB handles query embedding internally
-3. Keep `searchKnowledgeBase()` signature unchanged — no UI or API changes needed
-
-```typescript
-// Future example
-class PineconeEmbeddingStore implements EmbeddingStore {
-  getRecords(): EmbeddingRecord[] { /* ... */ }
-}
-```
+Replace `retrieveTopPolicies()` internals in `api/_lib/retrievalService.ts` with your vector DB client. The `api/chat.ts` route and frontend do not need to change.
 
 ## Environment Variables
 
 | Variable | Used By | Description |
 |----------|---------|-------------|
-| `OPENROUTER_API_KEY` | `api/embed`, generate script | OpenRouter API key |
-| `OPENROUTER_EMBEDDING_MODEL` | `api/embed`, generate script | Embedding model (default: `openai/text-embedding-3-small`) |
+| `OPENROUTER_API_KEY` | retrieval + LLM + generate script | OpenRouter API key |
+| `OPENROUTER_MODEL` | llmService | Chat model (e.g. Nemotron) |
+| `OPENROUTER_EMBEDDING_MODEL` | retrievalService + generate script | Embedding model |

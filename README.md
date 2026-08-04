@@ -6,8 +6,8 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 
 - Modern landing page with topic quick-actions
 - ChatGPT-style chat interface (scrollable messages, fixed input)
-- **Semantic retrieval** with embedding-based policy search
-- AI-powered answers via OpenRouter (serverless API)
+- **Server-side semantic retrieval** with embedding-based policy search
+- AI-powered answers via Nemotron (OpenRouter)
 - Source citations displayed under each response
 
 ## Tech Stack
@@ -16,7 +16,7 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 - Vite 8
 - TypeScript
 - Tailwind CSS 4
-- OpenRouter (LLM + embeddings)
+- OpenRouter (Nemotron + embeddings)
 - Vercel (deployment)
 
 ## Project Structure
@@ -25,8 +25,7 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 src/
   components/        # Reusable UI components
   pages/             # Page-level components
-  retrieval/         # Embedding store, similarity, embedding client
-  services/          # Retrieval, chat, and orchestration services
+  services/          # Frontend chat orchestration
   types/             # Shared TypeScript types
 data/
   knowledgeBase.json # Policy content (source of truth)
@@ -34,8 +33,10 @@ data/
 scripts/
   generateEmbeddings.ts  # Regenerate embeddings when KB changes
 api/
-  chat.ts            # Serverless AI generation endpoint
-  embed.ts           # Serverless query embedding endpoint
+  chat.ts            # Thin chat endpoint (orchestration only)
+  _lib/
+    retrievalService.ts  # Server-side semantic retrieval
+    llmService.ts        # Server-side Nemotron generation
 docs/
   RETRIEVAL.md       # Retrieval pipeline documentation
 ```
@@ -46,7 +47,7 @@ Copy `.env.example` to `.env.local` and set:
 
 ```
 OPENROUTER_API_KEY=your_openrouter_api_key_here
-OPENROUTER_MODEL=openai/gpt-4o-mini
+OPENROUTER_MODEL=nvidia/nemotron-...   # Nemotron via OpenRouter
 OPENROUTER_EMBEDDING_MODEL=openai/text-embedding-3-small
 ```
 
@@ -57,8 +58,6 @@ npm install
 npm run generate:embeddings   # only needed when knowledge base changes
 npm run dev
 ```
-
-Open [http://localhost:5173](http://localhost:5173) to view the app.
 
 For local development with API endpoints:
 
@@ -82,10 +81,11 @@ OPENROUTER_API_KEY=sk-... npm run generate:embeddings
 
 ## Architecture
 
-1. **Retrieval** — `searchKnowledgeBase()` embeds the question, compares against stored policy embeddings via cosine similarity, and returns the top 3 policies
-2. **Generation** — `/api/chat` sends policies + question to OpenRouter
-3. **UI** — displays the AI answer with cited policy sources
+1. **Frontend** sends `{ question }` to `/api/chat`
+2. **Retrieval** (`api/_lib/retrievalService.ts`) embeds the question, ranks policies by cosine similarity, returns top-K with full content
+3. **Generation** (`api/_lib/llmService.ts`) builds a grounded prompt and calls Nemotron via OpenRouter
+4. **UI** displays the answer
 
 See [docs/RETRIEVAL.md](docs/RETRIEVAL.md) for the full retrieval pipeline documentation.
 
-Retrieval and generation are kept separate. The frontend never calls OpenRouter directly.
+All retrieval and LLM logic runs server-side. The frontend never calls OpenRouter directly.

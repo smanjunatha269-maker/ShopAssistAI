@@ -16,15 +16,13 @@ export interface KnowledgeBaseItem {
 
 export interface ChatRequestBody {
   question: string
-  retrievedPolicies: KnowledgeBaseItem[]
 }
 
 export interface ChatApiResponse {
   answer: string
-  sources: string[]
 }
 
 export interface AssistantResponse {
   answer: string
-  sources: string[]
+  sources?: string[]
 }
