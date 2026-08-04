@@ -15,7 +15,13 @@ const API_ERROR_MESSAGE =
 export async function getSupportResponse(
   userQuestion: string,
 ): Promise<AssistantResponse> {
-  const policies = await searchKnowledgeBase(userQuestion)
+  let policies
+
+  try {
+    policies = await searchKnowledgeBase(userQuestion)
+  } catch {
+    return { answer: API_ERROR_MESSAGE, sources: [] }
+  }
 
   if (policies.length === 0) {
     return { answer: NO_POLICIES_MESSAGE, sources: [] }

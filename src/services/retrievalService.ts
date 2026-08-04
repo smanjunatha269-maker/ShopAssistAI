@@ -1,133 +1,37 @@
 import knowledgeBaseData from '../../data/knowledgeBase.json'
+import { embeddingClient } from '../retrieval/embeddingClient'
+import { embeddingStore } from '../retrieval/embeddingStore'
+import { rankBySimilarity } from '../retrieval/similarity'
 import type { KnowledgeBaseItem } from '../types'
 
 const KNOWLEDGE_BASE: KnowledgeBaseItem[] =
   knowledgeBaseData as KnowledgeBaseItem[]
 
+const POLICY_BY_ID = new Map(KNOWLEDGE_BASE.map((policy) => [policy.id, policy]))
+
 const TOP_RESULTS = 3
 
-const STOP_WORDS = new Set([
-  'a',
-  'an',
-  'the',
-  'is',
-  'are',
-  'was',
-  'were',
-  'be',
-  'been',
-  'being',
-  'have',
-  'has',
-  'had',
-  'do',
-  'does',
-  'did',
-  'will',
-  'would',
-  'could',
-  'should',
-  'may',
-  'might',
-  'can',
-  'to',
-  'of',
-  'in',
-  'for',
-  'on',
-  'with',
-  'at',
-  'by',
-  'from',
-  'as',
-  'into',
-  'about',
-  'tell',
-  'me',
-  'my',
-  'i',
-  'you',
-  'your',
-  'what',
-  'how',
-  'when',
-  'where',
-  'which',
-  'who',
-  'please',
-  'want',
-  'know',
-  'get',
-  'any',
-  'some',
-])
-
-interface ScoredPolicy {
-  policy: KnowledgeBaseItem
-  score: number
-}
-
-function tokenize(question: string): string[] {
-  return question
-    .toLowerCase()
-    .split(/\W+/)
-    .filter((word) => word.length > 1 && !STOP_WORDS.has(word))
-}
-
-function wordMatchesField(word: string, field: string): boolean {
-  return field.includes(word)
-}
-
-function scorePolicy(policy: KnowledgeBaseItem, words: string[]): number {
-  if (words.length === 0) return 0
-
-  const category = policy.category.toLowerCase()
-  const title = policy.title.toLowerCase()
-  const content = policy.content.toLowerCase()
-  const keywords = policy.keywords.map((keyword) => keyword.toLowerCase())
-
-  let score = 0
-
-  for (const word of words) {
-    for (const keyword of keywords) {
-      if (keyword === word || keyword.includes(word) || word.includes(keyword)) {
-        score += 5
-      }
-    }
-
-    if (wordMatchesField(word, category)) {
-      score += 3
-    }
-
-    if (wordMatchesField(word, title)) {
-      score += 2
-    }
-
-    if (wordMatchesField(word, content)) {
-      score += 1
-    }
-  }
-
-  return score
-}
-
 /**
- * Search the knowledge base for policies relevant to a user question.
- * Acts as an abstraction layer — the scoring implementation can later
- * be swapped for a vector-database search without changing callers.
+ * Semantic retrieval pipeline:
+ *
+ * 1. Embed the customer question via /api/embed
+ * 2. Compare against pre-computed policy embeddings (cosine similarity)
+ * 3. Return the top 3 most similar policies
+ *
+ * This function is the public retrieval API. Callers (supportService, UI)
+ * do not need to know whether retrieval is keyword-based or embedding-based.
+ * The embedding store and embedding client can be swapped for a vector
+ * database and managed embedding service without changing this signature.
  */
 export async function searchKnowledgeBase(
   userQuestion: string,
 ): Promise<KnowledgeBaseItem[]> {
-  const words = tokenize(userQuestion)
+  const queryEmbedding = await embeddingClient.embed(userQuestion)
+  const records = embeddingStore.getRecords()
 
-  const scored: ScoredPolicy[] = KNOWLEDGE_BASE.map((policy) => ({
-    policy,
-    score: scorePolicy(policy, words),
-  }))
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_RESULTS)
+  const ranked = rankBySimilarity(queryEmbedding, records, TOP_RESULTS)
 
-  return scored.map((entry) => entry.policy)
+  return ranked
+    .map((result) => POLICY_BY_ID.get(result.id))
+    .filter((policy): policy is KnowledgeBaseItem => policy !== undefined)
 }
