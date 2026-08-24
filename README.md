@@ -16,7 +16,8 @@ AI-powered customer support assistant for e-commerce, built with React, Vite, Ty
 - Vite 8
 - TypeScript
 - Tailwind CSS 4
-- OpenRouter (Nemotron + embeddings)
+- OpenRouter (Nemotron generation)
+- Xenova/all-MiniLM-L6-v2 (embeddings)
 - Vercel (deployment)
 
 ## Project Structure
@@ -47,8 +48,7 @@ Copy `.env.example` to `.env.local` and set:
 
 ```
 OPENROUTER_API_KEY=your_openrouter_api_key_here
-OPENROUTER_MODEL=nvidia/nemotron-...   # Nemotron via OpenRouter
-OPENROUTER_EMBEDDING_MODEL=openai/text-embedding-3-small
+OPENROUTER_MODEL=nvidia/nemotron-nano-9b-v2
 ```
 
 ## Getting Started
@@ -73,10 +73,10 @@ Deploy to Vercel and configure environment variables in your project settings.
 npx vercel
 ```
 
-Before deploying, regenerate embeddings with your production OpenRouter credentials:
+Before deploying, ensure `data/embeddings.json` is up to date:
 
 ```bash
-OPENROUTER_API_KEY=sk-... npm run generate:embeddings
+npm run generate:embeddings
 ```
 
 ## Architecture

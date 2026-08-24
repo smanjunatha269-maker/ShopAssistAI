@@ -4,8 +4,7 @@
  * Pipeline stages:
  *   1. Load pre-computed policy embeddings (data/embeddings.json)  — cached
  *   2. Load full policy content (data/knowledgeBase.json)          — cached
- *   3. Embed the customer question with the SAME model used for
- *      the stored embeddings
+ *   3. Embed the customer question with Xenova/all-MiniLM-L6-v2
  *   4. Rank stored embeddings by cosine similarity
  *   5. Return the top-K matching policies with full content
  *
@@ -16,6 +15,13 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import {
+  embedWithMiniLM,
+  MINILM_EMBEDDING_DIMENSION,
+  MiniLMEmbeddingError,
+} from './minilmEmbedding.js'
+
+export { MiniLMEmbeddingError }
 
 export interface KnowledgeBasePolicy {
   id: number
@@ -31,9 +37,6 @@ export interface EmbeddingRecord {
   embedding: number[]
 }
 
-const OPENROUTER_EMBEDDINGS_URL = 'https://openrouter.ai/api/v1/embeddings'
-const DEFAULT_EMBEDDING_MODEL = 'openai/text-embedding-3-small'
-const LOCAL_MODEL = 'Xenova/all-MiniLM-L6-v2'
 const TOP_K = 3
 
 /* ------------------------------------------------------------------ */
@@ -66,96 +69,17 @@ function loadPolicyIndex(): Map<number, KnowledgeBasePolicy> {
 }
 
 /* ------------------------------------------------------------------ */
-/* Stage 3: question embedding                                         */
+/* Stage 3: question embedding (MiniLM only)                           */
 /* ------------------------------------------------------------------ */
 
-// The local pipeline is cached so the model loads once per instance.
-type FeatureExtractor = (
-  text: string,
-  options?: { pooling?: string; normalize?: boolean },
-) => Promise<{ data: Float32Array }>
-
-let localExtractorPromise: Promise<FeatureExtractor> | null = null
-
-async function getLocalExtractor(): Promise<FeatureExtractor> {
-  if (!localExtractorPromise) {
-    localExtractorPromise = import('@xenova/transformers').then(
-      async ({ pipeline }) =>
-        (await pipeline('feature-extraction', LOCAL_MODEL)) as unknown as FeatureExtractor,
+function assertEmbeddingCompatibility(storedDimension: number): void {
+  if (storedDimension !== MINILM_EMBEDDING_DIMENSION) {
+    throw new MiniLMEmbeddingError(
+      `Embedding dimension mismatch: embeddings.json has ${storedDimension}-dimensional ` +
+        `vectors, but ${MINILM_EMBEDDING_DIMENSION} are expected from Xenova/all-MiniLM-L6-v2. ` +
+        'Regenerate data/embeddings.json with npm run generate:embeddings.',
     )
   }
-  return localExtractorPromise
-}
-
-async function embedWithLocalModel(text: string): Promise<number[]> {
-  const extractor = await getLocalExtractor()
-  const output = await extractor(text, { pooling: 'mean', normalize: true })
-  return Array.from(output.data)
-}
-
-async function embedWithOpenRouter(
-  text: string,
-  apiKey: string,
-): Promise<number[]> {
-  const model = process.env.OPENROUTER_EMBEDDING_MODEL ?? DEFAULT_EMBEDDING_MODEL
-
-  const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ model, input: text }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`OpenRouter embeddings failed: ${await response.text()}`)
-  }
-
-  const result = (await response.json()) as {
-    data?: Array<{ embedding?: number[] }>
-  }
-
-  const embedding = result.data?.[0]?.embedding
-
-  if (!embedding?.length) {
-    throw new Error('OpenRouter returned an empty embedding')
-  }
-
-  return embedding
-}
-
-/**
- * Embeds the customer question with the same model that produced
- * data/embeddings.json.
- *
- * The stored embedding dimension is used as a compatibility guard:
- * if OpenRouter returns vectors of a different dimension than the
- * stored ones (meaning embeddings.json was generated with a different
- * model), we fall back to the local model so similarity stays valid.
- */
-async function embedQuestion(
-  text: string,
-  storedDimension: number,
-): Promise<number[]> {
-  const apiKey = process.env.OPENROUTER_API_KEY
-
-  if (apiKey) {
-    try {
-      const embedding = await embedWithOpenRouter(text, apiKey)
-      if (embedding.length === storedDimension) {
-        return embedding
-      }
-      console.warn(
-        `Embedding dimension mismatch (query ${embedding.length} vs stored ${storedDimension}); ` +
-          'falling back to local model. Regenerate embeddings.json with the production model.',
-      )
-    } catch (error) {
-      console.warn('OpenRouter embedding failed, using local fallback:', error)
-    }
-  }
-
-  return embedWithLocalModel(text)
 }
 
 /* ------------------------------------------------------------------ */
@@ -198,7 +122,9 @@ export async function retrieveTopPolicies(
   }
 
   const storedDimension = embeddings[0].embedding.length
-  const queryEmbedding = await embedQuestion(question, storedDimension)
+  assertEmbeddingCompatibility(storedDimension)
+
+  const queryEmbedding = await embedWithMiniLM(question)
 
   const rankedIds = embeddings
     .map((record) => ({
