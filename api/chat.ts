@@ -11,7 +11,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { generateAnswer } from './_lib/llmService.js'
-import { retrieveTopPolicies } from './_lib/retrievalService.js'
+import { MiniLMEmbeddingError, retrieveTopPolicies } from './_lib/retrievalService.js'
 
 interface ChatRequestBody {
   question: string
@@ -48,6 +48,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ answer })
   } catch (error) {
     console.error('Chat handler error:', error)
+
+    if (error instanceof MiniLMEmbeddingError) {
+      return res.status(503).json({
+        error:
+          'The embedding model is temporarily unavailable. Please try again in a moment.',
+      })
+    }
+
     return res.status(500).json({ error: 'Failed to generate response' })
   }
 }
