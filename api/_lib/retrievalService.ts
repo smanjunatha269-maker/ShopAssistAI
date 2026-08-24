@@ -135,14 +135,16 @@ function logRetrievalScores(
   question: string,
   matches: PolicySimilarityMatch[],
 ): void {
-  for (const match of matches) {
-    console.log('[retrieval] similarity score', {
-      question,
-      policyTitle: match.title,
-      cosineSimilarity: Number(match.score.toFixed(4)),
-      threshold: POLICY_SIMILARITY_THRESHOLD,
-    })
-  }
+  const lines = [
+    '[Retrieval Debug]',
+    `Question: ${question}`,
+    ...matches.map(
+      (match, index) =>
+        `${index + 1}. ${match.title} | similarity: ${match.score.toFixed(4)}`,
+    ),
+  ]
+
+  console.log(lines.join('\n'))
 }
 
 /**
