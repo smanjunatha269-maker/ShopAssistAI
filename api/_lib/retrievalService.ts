@@ -39,6 +39,15 @@ export interface EmbeddingRecord {
 
 const TOP_K = 3
 
+/** Tune after inspecting logged similarity scores; not applied yet. */
+const POLICY_SIMILARITY_THRESHOLD = 0.0
+
+export interface PolicySimilarityMatch {
+  id: number
+  title: string
+  score: number
+}
+
 /* ------------------------------------------------------------------ */
 /* Stage 1 + 2: cached data loading                                    */
 /* ------------------------------------------------------------------ */
@@ -107,6 +116,35 @@ function cosineSimilarity(a: number[], b: number[]): number {
 /* Stage 5: top-K retrieval                                            */
 /* ------------------------------------------------------------------ */
 
+function rankPoliciesBySimilarity(
+  queryEmbedding: number[],
+  embeddings: EmbeddingRecord[],
+  topK: number,
+): PolicySimilarityMatch[] {
+  return embeddings
+    .map((record) => ({
+      id: record.id,
+      title: record.title,
+      score: cosineSimilarity(queryEmbedding, record.embedding),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+}
+
+function logRetrievalScores(
+  question: string,
+  matches: PolicySimilarityMatch[],
+): void {
+  for (const match of matches) {
+    console.log('[retrieval] similarity score', {
+      question,
+      policyTitle: match.title,
+      cosineSimilarity: Number(match.score.toFixed(4)),
+      threshold: POLICY_SIMILARITY_THRESHOLD,
+    })
+  }
+}
+
 /**
  * Returns the top-K policies most semantically similar to the question,
  * with full content resolved from knowledgeBase.json.
@@ -125,18 +163,18 @@ export async function retrieveTopPolicies(
   assertEmbeddingCompatibility(storedDimension)
 
   const queryEmbedding = await embedWithMiniLM(question)
+  const rankedMatches = rankPoliciesBySimilarity(queryEmbedding, embeddings, topK)
 
-  const rankedIds = embeddings
-    .map((record) => ({
-      id: record.id,
-      score: cosineSimilarity(queryEmbedding, record.embedding),
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topK)
+  logRetrievalScores(question, rankedMatches)
+
+  // Future relevance gate — not applied yet while we inspect logged scores.
+  // const relevantMatches = rankedMatches.filter(
+  //   (match) => match.score >= POLICY_SIMILARITY_THRESHOLD,
+  // )
 
   const policyById = loadPolicyIndex()
 
-  return rankedIds
-    .map((ranked) => policyById.get(ranked.id))
+  return rankedMatches
+    .map((match) => policyById.get(match.id))
     .filter((policy): policy is KnowledgeBasePolicy => policy !== undefined)
 }
