@@ -1,5 +1,5 @@
 import { askQuestion } from './chatService'
-import type { AssistantResponse } from '../types'
+import type { ChatApiResponse } from '../types'
 
 const API_ERROR_MESSAGE =
   "I'm unable to answer your question right now. Please try again."
@@ -11,10 +11,9 @@ const API_ERROR_MESSAGE =
  */
 export async function getSupportResponse(
   userQuestion: string,
-): Promise<AssistantResponse> {
+): Promise<ChatApiResponse> {
   try {
-    const response = await askQuestion(userQuestion)
-    return { answer: response.answer }
+    return await askQuestion(userQuestion)
   } catch {
     return { answer: API_ERROR_MESSAGE }
   }

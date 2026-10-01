@@ -15,16 +15,11 @@ const TOPICS = [
   'Promotions',
 ]
 
-function createMessage(
-  role: Message['role'],
-  content: string,
-  sources?: string[],
-): Message {
+function createMessage(role: Message['role'], content: string): Message {
   return {
     id: crypto.randomUUID(),
     role,
     content,
-    sources,
     timestamp: new Date(),
   }
 }
